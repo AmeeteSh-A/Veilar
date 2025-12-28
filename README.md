@@ -51,7 +51,7 @@ Veilar works in **two phases**:
 > The runtime executes **behavior and rendering**.
 
 ---
-
+~~~ mermaid
 flowchart TD
     subgraph Phase 1: Build-Time [Transpilation]
         A[Source XML + as9: DSL] --> B[VeilarEngine]
@@ -71,7 +71,7 @@ flowchart TD
 
     D -.-> G
     E -.-> G
-
+~~~
 ## Native Android vs Veilar
 
 | Native Android | Veilar |

@@ -52,7 +52,7 @@ Veilar works in **two phases**:
 
 ---
 
-graph TD
+flowchart TD
     subgraph Phase 1: Build-Time [Transpilation]
         A[Source XML + as9: DSL] --> B[VeilarEngine]
         B --> C{Static Analysis}

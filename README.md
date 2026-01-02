@@ -99,11 +99,6 @@ com.example.veilar.VeilarButton
     as9:shade="crimson+light_green"
     as9:interaction="shrink,vibe"  />
 ~~~
-
-### Another Example (conceptual)
--*-*-*-*-*-*-*--------------------*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**--*-*-*-*
-
-
 (Examples are placeholders — see documentation below.)
 
 ---
@@ -165,24 +160,23 @@ Features executed by `VeilarButton`, `VeilarLayout`, etc., on the device.
 
 ---
 
-## Architecture Overview
+## ⚙️ Architecture: The "Invisible Hook"
 
-### Build-Time (via `buildSrc`)
-- DOM-based XML parsing
-- ID-based attribute reuse (`id:otherView`)
-- DSL → bundle compilation
-- Native resource generation
-- Tag rewriting to Veilar views
-- Build report emission
+Veilar's genius lies in how it attaches to your project. It does not require a custom IDE plugin or a forked Android SDK.
 
-### Runtime (custom views)
-- `VeilarButton`
-- `VeilarLayout`
-- `VeilarTextView`
+### 1. The Build-Time Hook
+When you add `apply from: 'veilar.gradle'`, Veilar inserts itself directly into the Gradle execution graph **before** the standard Android resource merger runs.
+1.  **Intercept:** It scans your layout XMLs for `as9:` attributes.
+2.  **Compile:** It calculates the geometry and gradients in Java/Groovy.
+3.  **Inject:** It generates standard Android XML resources (drawables, selectors) and places them into the build stream.
+4.  **Rewrite:** It swaps your raw tags (e.g., `<Button>`) with Veilar's runtime counterparts.
 
-These classes consume compiled bundles and execute rendering and interaction logic directly.
+**Result:** The final APK contains optimized, native bytecode. The heavy lifting is done before the app even launches.
 
----
+### 2. The Runtime Engine
+Once the app launches, `VeilarButton` and `VeilarLayout` take over. instead of parsing heavy XML files, they read the lightweight, pre-compiled "bundles" injected during the build.
+* **Zero Reflection:** Properties are applied via standard setter methods.
+* **GPU Rendering:** Shapes are drawn using `Canvas` and `Shader` primitives, ensuring 60fps animations even for complex polygons.---
 
 ## Transparency & Safety
 
@@ -193,9 +187,9 @@ assets/veilar_report.json
 
 This maps generated assets to their source declarations.
 
-- No reflection  
-- No hidden runtime parsing  
-- No silent behavior  
+- **No Reflection:** Attributes are applied via standard setters, keeping it fast and safe.
+- **Build-Time Resolution:** Heavy DSL logic (recursion, color math) is compiled, not interpreted at runtime.
+- **Explicit Execution:** The runtime views only consume optimized, pre-compiled data bundles. 
 
 ---
 
@@ -213,7 +207,7 @@ This separation keeps usage simple while allowing deep technical inspection.
 
 ---
 
-## Limitations (Known & Intentional)
+## Technical Trade-offs (Known & Intentional)
 
 - Not incremental-build optimized
 - String-based DSL (no schema validation)
@@ -258,6 +252,10 @@ Project Root
 - ❌ Not production-ready tooling
 
 Veilar is a **systems-level exploration** of Android UI compilation and execution.
+
+---
+## 💡 Why I Built This
+I wanted to challenge the assumption that Android UI development *has* to be verbose. By treating XML layouts as source code to be compiled rather than just static markup, I proved that we can have the **expressiveness of a modern framework** (like Flutter) with the **performance and stability of the native Android View System**.
 
 ---
 

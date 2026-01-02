@@ -256,11 +256,11 @@ This maps generated assets to their source declarations.
 
 Veilar has **two levels of documentation**:
 
-- [**User Manual (Conceptual / Usage)**]  
-  (Veilar/docs/user_manual.md)
+- **[📘 User Manual (Conceptual / Usage)](Veilar/docs/user_manual.md)**
+  *For developers integrating Veilar into their apps.*
 
-- [**Technical Architecture (Build + Runtime internals)**]  
-  (Veilar/docs/architecture.md)
+- **[⚙️ Technical Architecture (Build + Runtime internals)](Veilar/docs/architecture.md)**
+  *For contributors and engineers.*
 
 This separation keeps usage simple while allowing deep technical inspection.
 

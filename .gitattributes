@@ -1,0 +1,4 @@
+*.gradle linguist-detectable=true
+*.gradle linguist-language=Groovy
+
+*.xml linguist-detectable=true

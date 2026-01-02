@@ -152,7 +152,7 @@ Features executed by `VeilarButton`, `VeilarLayout`, etc., on the device.
 
 - **Procedural Geometry (Shapes)**  
   Draws complex shapes mathematically on the GPU.  
-  **Supported:** Circle, Oval, Pill, Squircle, Cut Corners, Dynamic Polygons (3–12 sides)
+  **Supported:** Circle, Oval, Pill, Squircle, Cut Corners, Dynamic Polygons
 
 - **Interaction State Machine**  
   A unified physics engine that handles touch feedback without selector XMLs.  

@@ -262,19 +262,21 @@ your-project/
 
 -Include the module in `settings.gradle`:
     
-    ```xml
+    ```text
     include ':veilar'
     ```
 
 -Add Dependency in `app/build.gradle`:
-    ```xml
+
+    ```text
     dependencies {
     implementation project(':veilar')
     }
     ```
 
 -Activate Compiler in `app/build.gradle` (Top or Bottom):
-    ```xml
+
+    ```text
     apply from: '../veilar/veilar.gradle'
     ```
 

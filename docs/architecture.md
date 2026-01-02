@@ -1,7 +1,4 @@
 # ⚙️ Veilar Architecture & Internals
-<p align="right">
-  <a href="/README.md">🔙 Back to Readme</a>
-</p>
 
 > **"Write Intent. Compile Native."**
 
@@ -116,3 +113,10 @@ veilar/
         ├── VeilarButton.java   # Handles 'shrink' and 'bggradient'
         ├── VeilarLayout.java   # Handles 'pop', 'vibe', containers
         └── VeilarTextView.java # Handles text gradients
+
+
+- **[📘 User Manual (Conceptual / Usage)](Veilar/docs/user_manual.md)**
+  *For developers integrating Veilar into their apps.*
+<p align="right">
+  <a href="../../README.md">🔙 Back to Readme</a>
+</p>

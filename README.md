@@ -28,6 +28,7 @@ In native Android, even a simple interactive component (custom shape + pressed s
 Veilar collapses this into **a single declarative tag**, without sacrificing performance or control.
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>
+
 ---
 
 ### ⚡ The Efficiency Gap
@@ -61,7 +62,9 @@ Veilar works in **two phases**:
 > The runtime executes **behavior and rendering**.
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>
+
 ---
+
 ~~~ mermaid
 flowchart TD
     subgraph Phase 1: Build-Time [Transpilation]
@@ -94,6 +97,7 @@ flowchart TD
 | Verbose XML | Compact DSL |
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>
+
 ---
 
 ## The DSL (as9:)
@@ -151,7 +155,9 @@ Veilar introduces a small, composable DSL via XML attributes.
 (Examples are placeholders — see documentation below.)
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>
+
 ---
+
 ## ✨Supported Features
 
 ### 🏗️ Build-Time (The Compiler)
@@ -208,6 +214,7 @@ Features executed by `VeilarButton`, `VeilarLayout`, etc., on the device.
   The `vibe` attribute triggers the system's haptic feedback engine automatically on interaction events.
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>
+
 ---
 
 ## ⚙️ Architecture: The "Invisible Hook"
@@ -242,6 +249,7 @@ This maps generated assets to their source declarations.
 - **Explicit Execution:** The runtime views only consume optimized, pre-compiled data bundles. 
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>
+
 ---
 
 ## 📄Documentation
@@ -257,6 +265,7 @@ Veilar has **two levels of documentation**:
 This separation keeps usage simple while allowing deep technical inspection.
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>
+
 ---
 
 ## 📦 Installation
@@ -288,6 +297,7 @@ your-project/
 *(This hooks Veilar into your build process to perform the XML translation.)*
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>
+
 ---
 
 ## ⚠️Technical Trade-offs (Known & Intentional)
@@ -326,6 +336,7 @@ Project Root
 ```
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>
+
 ---
 
 ## 🚧What Veilar Is Not

@@ -207,5 +207,5 @@ Veilar is transparent. If something is wrong, it prints **Yellow Warnings** in y
 - **[⚙️ Technical Architecture (Build + Runtime internals)](/docs/architecture.md)**
   *For contributors and engineers.*
   <p align="right">
-  <a href="../../README.md">Readme</a>
+  <a href="/README.md">Readme</a>
 </p>

@@ -4,7 +4,7 @@
 
 ---
 ### 🔗 Quick Links
-- [⚡ The Efficiency Gap](#-the-efficiency-gap) - [⚙️ Architecture](#-architecture-the-invisible-hook) - [📦 Installation Steps](#-installation)
+- [⚡ The Efficiency Gap](#-the-efficiency-gap) - [⚙️ Architecture](#https://github.com/AmeeteSh-A/Veilar?tab=readme-ov-file#%EF%B8%8F-architecture-the-invisible-hook) - [📦 Installation Steps](#-installation)
 - [📐 Usage Example](#-usage-example) - [✨Features](#supported-features) -[📄Documentation](#documentation) - [📂 Project Structure](#-project-structure)
 ---
 

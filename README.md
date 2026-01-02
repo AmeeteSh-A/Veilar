@@ -252,16 +252,20 @@ This separation keeps usage simple while allowing deep technical inspection.
 
 Veilar is designed as a drop-in module.
 
-Copy the veilar directory to your project root.
-    -Include the module in `settings.gradle`:
+-Copy the veilar directory to your project root.
+
+-Include the module in `settings.gradle`:
     `include ':veilar'`
-    -Add Dependency in `app/build.gradle`:
+
+-Add Dependency in `app/build.gradle`:
     ```dependencies {
     implementation project(':veilar')
     }```
-    -Activate Compiler in `app/build.gradle` (Top or Bottom):
+
+-Activate Compiler in `app/build.gradle` (Top or Bottom):
     `apply from: '../veilar/veilar.gradle'`
-    *(This hooks Veilar into your build process to perform the XML translation.)*
+
+*(This hooks Veilar into your build process to perform the XML translation.)*
 
 ---
 

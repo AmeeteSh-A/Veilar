@@ -107,28 +107,61 @@ com.example.veilar.VeilarButton
 (Examples are placeholders — see documentation below.)
 
 ---
-
 ## Supported Features
 
-### Shapes (runtime)
-- Circle / Oval
-- Pill
-- Squircle
-- Cut corners
-- Dynamic polygons (3–12 sides)
+### 🏗️ Build-Time (The Compiler)
 
-### Colors & Gradients (runtime)
-- Additive blending (`blue+teal`)
-- Brightness modifiers (`_light`, `_dark`)
-- Linear / radial / sweep gradients
-- Auto-normalized gradient stops
+Features executed by `veilar.gradle` during the build process.
 
-### Interactions (runtime)
-- `shrink`, `pop` (motion)
-- `dim`, `glow` (visual feedback)
-- `vibe` (haptics)
+- **Color Algebra & Modifiers**  
+  Veilar resolves complex color math before the app even runs. You can blend colors additively (`blue+teal`) or modify brightness (`_dark`) directly in XML.  
+  ~~~xml
+  as9:shade="blue+yellow"
+  as9:bgshade="dark_orange"
+  ~~~
 
-All interactions are executed via a lightweight runtime state machine.
+- **Gradient Normalization**  
+  The compiler parses gradient strings, calculates missing stop positions (e.g., distributing 3 colors evenly), and bundles them into a normalized format for the runtime engine.
+
+- **Context-Aware Sizing**  
+  Uses a single `%` syntax that compiles into different attributes depending on the parent container (`ConstraintLayout` vs `LinearLayout`).  
+  ~~~xml
+  as9:width="30%"
+  ~~~
+
+- **Recursive ID Referencing**  
+  Allows views to inherit property values from other views by referencing their IDs. The compiler resolves these chains recursively.  
+  ~~~xml
+  as9:bgshade="id:btn_1"
+  ~~~
+
+- **Asset Injection**  
+  Copies raw file paths into the project's drawable resources automatically via `as9:src`, eliminating manual file management.
+  ~~~xml
+  as9:src=""C:\Users\Lenovo\Desktop\ClassiFyUI\itemcontainer.png"
+  ~~~
+
+---
+
+### 🚀 Runtime (The Engine)
+
+Features executed by `VeilarButton`, `VeilarLayout`, etc., on the device.
+
+- **Gradient Rendering**  
+  The runtime engine interprets the normalized data to construct GPU shaders (Linear, Radial, Sweep) on the fly, allowing for dynamic updates without static drawables.
+
+- **Procedural Geometry (Shapes)**  
+  Draws complex shapes mathematically on the GPU.  
+  **Supported:** Circle, Oval, Pill, Squircle, Cut Corners, Dynamic Polygons (3–12 sides)
+
+- **Interaction State Machine**  
+  A unified physics engine that handles touch feedback without selector XMLs.  
+  - **Motion:** `shrink` (scale down), `pop` (scale up)  
+  - **Visual:** `dim` (darken), `glow` (lighten)
+
+- **Haptic Integration**  
+  The `vibe` attribute triggers the system's haptic feedback engine automatically on interaction events.
+
 
 ---
 

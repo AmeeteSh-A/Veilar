@@ -9,8 +9,6 @@ import java.nio.file.StandardCopyOption
 task runVeilarCompiler {
     def inputDir = project.file("src/main/res/layout")
     def outputDir = project.file("${project.buildDir}/generated/veilar/res/layout")
-    // Note: In Groovy script, we pass the base 'src/main/res' to the engine
-    // so it can find 'color' and 'drawable' folders relative to it.
     def resDir = project.file("src/main/res")
 
     inputs.dir(inputDir)
@@ -18,18 +16,13 @@ task runVeilarCompiler {
 
     doLast {
         println "Veilar: Starting compilation..."
-        // Ensure output directory exists
         if (!outputDir.exists()) outputDir.mkdirs()
 
-        // Run the engine
         VeilarEngine.run(inputDir, outputDir, resDir)
     }
 }
 
 afterEvaluate { project ->
-    // HOOK UPDATE: Instead of adding to 'main', we add to 'debug' and 'release'.
-    // This gives the generated resources HIGHER priority, causing them to
-    // silently override the original files in 'main' without "Duplicate Resource" errors.
     android.sourceSets.matching { it.name == 'debug' || it.name == 'release' }.all { sourceSet ->
         sourceSet.res.srcDirs += "${project.buildDir}/generated/veilar/res"
     }
@@ -54,7 +47,6 @@ class ColorResolver {
             return "#000000"
         }
 
-        // PATCH: Handle case sensitivity (e.g. "White" vs "white")
         input = input.toLowerCase().trim()
 
         if (input.startsWith("#")) {
@@ -63,7 +55,6 @@ class ColorResolver {
             String[] colors = input.split("\\+")
             int totalR = 0, totalG = 0, totalB = 0
 
-            // To match Java logic of averaging valid colors
             int validColorCount = 0
 
             for (String colorEntry : colors) {
@@ -84,7 +75,7 @@ class ColorResolver {
                         hex = part
                         foundBase = true
                     } else {
-                        // println "\u001B[33mVEILAR WARNING:\nUnknown color constant '${part}'. Defaulting to Black (#000000).\u001B[0m"
+                        println "\u001B[33mVEILAR WARNING:\nUnknown color constant '${part}'. Defaulting to Black (#000000).\u001B[0m"
                     }
                 }
 
@@ -131,7 +122,7 @@ class GradientResolver {
     static Result resolve(String input) {
         if (!input || !input.contains(";")) {
             println "\u001B[33mVEILAR WARNING:\nInvalid gradient input. Format should be 'color:stop;color:stop|type|angle'.\u001B[0m"
-            return null // Caller handles null
+            return null 
         }
 
         input = input.toLowerCase()
@@ -237,7 +228,6 @@ class VeilarEngine {
     static int selectorCount = 0
     static Map<String, String> generatedAssets = [:]
 
-    // Modified run signature to accept folder paths directly from gradle task
     static void run(File inputDir, File outputDir, File resDir) {
         try {
             selectorCount = 0
@@ -247,7 +237,6 @@ class VeilarEngine {
             File drawDir = new File(resDir, "drawable")
             File assetsDir = new File(resDir.getParentFile(), "assets")
 
-            // Logic from clearOldVeilarResources
             if (colorDir.exists()) {
                 colorDir.listFiles()?.each { if (it.name.startsWith("vsel_")) it.delete() }
             }
@@ -255,7 +244,6 @@ class VeilarEngine {
                 drawDir.listFiles()?.each { if (it.name.startsWith("vsrc_")) it.delete() }
             }
 
-            // Iterate over all XML files in layout directory
             inputDir.listFiles()?.each { file ->
                 if (file.name.endsWith(".xml")) {
                     processFile(file, new File(outputDir, file.name), colorDir, drawDir, assetsDir)
@@ -273,14 +261,12 @@ class VeilarEngine {
             DocumentBuilder builder = factory.newDocumentBuilder()
             Document doc = builder.parse(inputFile)
 
-            // Logic: Snapshot Construction
             Map<String, Map<String, String>> attrSnapshot = [:]
             NodeList allNodes = doc.getElementsByTagName("*")
 
             for (int i = 0; i < allNodes.length; i++) {
                 Element el = (Element) allNodes.item(i)
                 if (el.hasAttribute("android:id")) {
-                    // Normalize ID: remove @+id/ and lowercase it for reliable lookup
                     String cleanId = el.getAttribute("android:id").replaceAll("@\\+?id/", "").toLowerCase()
                     Map<String, String> attrs = [:]
                     NamedNodeMap nnm = el.getAttributes()
@@ -292,11 +278,10 @@ class VeilarEngine {
                 }
             }
 
-            // Logic: Main Transformation Loop
             for (int i = 0; i < allNodes.length; i++) {
                 Element element = (Element) allNodes.item(i)
                 boolean needsSwap = false
-                int parsedShapeId = 0 // Track shape ID to inject default radius if needed
+                int parsedShapeId = 0 
 
                 String userId = element.hasAttribute("android:id") ?
                         element.getAttribute("android:id").replaceAll("@\\+?id/", "").toLowerCase() :
@@ -313,7 +298,6 @@ class VeilarEngine {
                             Files.copy(srcFile.toPath(), new File(drawDir, safeName + getExtension(srcFile)).toPath(), StandardCopyOption.REPLACE_EXISTING)
 
                             element.setAttribute("android:background", "@drawable/" + safeName)
-                            // Cleanup
                             element.removeAttribute("as9:src")
                             element.removeAttribute("as9:shade")
                             element.removeAttribute("as9:bgshade")
@@ -390,7 +374,7 @@ class VeilarEngine {
                             }
                         }
 
-                        parsedShapeId = shapeId // Store for later default injection
+                        parsedShapeId = shapeId
                         element.setAttribute("app:shapeBundle", "${shapeId}:${param}")
                         element.removeAttribute("as9:shape")
                         needsSwap = true
@@ -402,9 +386,6 @@ class VeilarEngine {
                     element.removeAttribute("as9:radius")
                     needsSwap = true
                 } else {
-                    // PATCH: Default radius logic.
-                    // If complex shape (2=Cut, 4=Squircle) is used but radius is missing -> 16dp
-                    // If no shape (0=Rect) but BG gradient is present -> 8dp
                     if (parsedShapeId == 2 || parsedShapeId == 4) {
                         element.setAttribute("app:radius", "16dp")
                     } else if (element.hasAttribute("as9:bggradient")) {
@@ -445,9 +426,8 @@ class VeilarEngine {
                     String originalTag = element.tagName
                     String newTag = originalTag
 
-                    // Comprehensive swap logic
                     if (originalTag.contains("ConstraintLayout")) newTag = "com.veilar.VeilarLayout"
-                    else if (originalTag.contains("LinearLayout")) newTag = "com.veilar.VeilarLayout" // Crucial for octo_container
+                    else if (originalTag.contains("LinearLayout")) newTag = "com.veilar.VeilarLayout" 
                     else if (originalTag == "Button" || originalTag.contains("Button")) newTag = "com.veilar.VeilarButton"
                     else if (originalTag == "TextView") newTag = "com.veilar.VeilarTextView"
 
@@ -482,7 +462,6 @@ class VeilarEngine {
         if (parent instanceof Element) {
             Element pEl = (Element) parent
             String pName = pEl.nodeName
-            // PATCH: Added VeilarLayout to valid parents check
             boolean isConstraint = pName.contains("ConstraintLayout") || pName.contains("VeilarLayout")
             boolean isLinear = pName.contains("LinearLayout")
 

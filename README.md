@@ -256,10 +256,10 @@ This maps generated assets to their source declarations.
 
 Veilar has **two levels of documentation**:
 
-- **[📘 User Manual (Conceptual / Usage)](Veilar/docs/user_manual.md)**
+- **[📘 User Manual (Conceptual / Usage)](/docs/user_manual.md)**
   *For developers integrating Veilar into their apps.*
 
-- **[⚙️ Technical Architecture (Build + Runtime internals)](Veilar/docs/architecture.md)**
+- **[⚙️ Technical Architecture (Build + Runtime internals)](/docs/architecture.md)**
   *For contributors and engineers.*
 
 This separation keeps usage simple while allowing deep technical inspection.
@@ -282,17 +282,17 @@ your-project/
 
 - Include the module in `settings.gradle`:
     
-    include ':veilar'
+    `include ':veilar'`
 
 - Add Dependency in `app/build.gradle`:
 
-    dependencies {
+    ```dependencies {
     implementation project(':veilar')
-    }
+    }```
 
 - Activate Compiler in `app/build.gradle` (Top or Bottom):
 
-    apply from: '../veilar/veilar.gradle'
+    `apply from: '../veilar/veilar.gradle'`
 
 *(This hooks Veilar into your build process to perform the XML translation.)*
 

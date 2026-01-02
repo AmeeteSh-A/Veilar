@@ -203,6 +203,5 @@ Veilar is transparent. If something is wrong, it prints **Yellow Warnings** in y
 | `Resolution depth limit (10) exceeded.` | Infinite Loop (View A copies View B, View B copies View A). | Check your `id:` references and remove the loop. |
 | `Invalid polygon side count.` | You wrote `gon:x` where x is not a number. | Use a valid integer, e.g., `gon:6`. |
 
-```
 
-```
+#### [⚙️Check out the architecture document] (Veilar/docs/architecture.md) ####

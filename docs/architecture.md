@@ -1,7 +1,6 @@
 # ⚙️ Veilar Architecture & Internals
-
 <p align="right">
-  <a href="../../README.md">🔙 Back to Readme</a>
+  <a href="/README.md">🔙 Back to Readme</a>
 </p>
 
 > **"Write Intent. Compile Native."**

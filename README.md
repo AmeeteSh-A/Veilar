@@ -272,7 +272,7 @@ This separation keeps usage simple while allowing deep technical inspection.
 
 Veilar is designed as a drop-in module.
 
--Copy the veilar directory to your project root.
+- Copy the veilar directory to your project root.
 ```text
 your-project/
 ├─ app/
@@ -280,17 +280,17 @@ your-project/
 └─ settings.gradle and other packages
 ```
 
--Include the module in `settings.gradle`:
+- Include the module in `settings.gradle`:
     
     include ':veilar'
 
--Add Dependency in `app/build.gradle`:
+- Add Dependency in `app/build.gradle`:
 
     dependencies {
     implementation project(':veilar')
     }
 
--Activate Compiler in `app/build.gradle` (Top or Bottom):
+- Activate Compiler in `app/build.gradle` (Top or Bottom):
 
     apply from: '../veilar/veilar.gradle'
 

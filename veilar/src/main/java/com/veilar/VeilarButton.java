@@ -5,7 +5,7 @@ import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.LinearGradient; // <--- From android.graphics
+import android.graphics.LinearGradient; 
 import android.graphics.Outline;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -36,12 +36,12 @@ public class VeilarButton extends AppCompatButton {
     private String cachedBgShade = null;
 
     public VeilarButton(Context androidContext, AttributeSet attrs) {
-        super(androidContext, attrs); // Removed the '0' defStyleAttr as AppCompat handles it better
+        super(androidContext, attrs); 
         init(androidContext, attrs);
     }
 
     private void init(Context context, AttributeSet attrs) {
-        // 1. NUCLEAR CLEANUP
+        
         setBackground(null);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setElevation(0);
@@ -70,7 +70,6 @@ public class VeilarButton extends AppCompatButton {
             shapeParam = Integer.parseInt(parts[1]);
         }
 
-        // Logic moved to Gradle: We expect the XML to have the correct string now
         if (radiusStr != null) {
             manualRadius = Float.parseFloat(radiusStr.replaceAll("[^\\d.]", "")) * density;
         }

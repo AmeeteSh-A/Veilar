@@ -1,0 +1,651 @@
+import org.w3c.dom.*
+import javax.xml.parsers.*
+import javax.xml.transform.*
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+// ==========================================================================
+// PART 1: THE GRADLE TASK CONFIGURATION
+// ==========================================================================
+
+task runVeilarCompiler {
+    def inputDir = project.file("src/main/res/layout")
+    def outputDir = project.file("${project.buildDir}/generated/veilar/res/layout")
+    // Note: In Groovy script, we pass the base 'src/main/res' to the engine
+    // so it can find 'color' and 'drawable' folders relative to it.
+    def resDir = project.file("src/main/res")
+
+    inputs.dir(inputDir)
+    outputs.dir(outputDir)
+
+    doLast {
+        println "Veilar: Starting compilation..."
+        // Ensure output directory exists
+        if (!outputDir.exists()) outputDir.mkdirs()
+
+        // Run the engine
+        VeilarEngine.run(inputDir, outputDir, resDir)
+    }
+}
+
+afterEvaluate { project ->
+    // HOOK UPDATE: Instead of adding to 'main', we add to 'debug' and 'release'.
+    // This gives the generated resources HIGHER priority, causing them to
+    // silently override the original files in 'main' without "Duplicate Resource" errors.
+    android.sourceSets.matching { it.name == 'debug' || it.name == 'release' }.all { sourceSet ->
+        sourceSet.res.srcDirs += "${project.buildDir}/generated/veilar/res"
+    }
+
+    tasks.named("preBuild").configure {
+        dependsOn runVeilarCompiler
+    }
+}
+
+// ==========================================================================
+// PART 2: THE LOGIC (Direct translation of your Java files)
+// ==========================================================================
+
+class ColorResolver {
+    static final Map<String, String> basecolors = [
+            "red": "#FF0000", "blue": "#0000FF", "yellow": "#FFFF00", "green": "#008000",
+            "orange": "#FFA500", "purple": "#800080", "teal": "#008080", "magenta": "#FF00FF",
+            "amber": "#FFC107", "lime": "#00FF00", "violet": "#8F00FF", "crimson": "#DC143C",
+            "black": "#000000", "white": "#FFFFFF", "gray": "#808080", "brown": "#8B4513",
+            "cyan": "#00FFFF", "light_red": "#FF6666", "dark_blue": "#00008B", "dark_gray": "#A9A9A9"
+    ]
+
+    static String resolve(String input) {
+        if (!input || input.isEmpty()) {
+            println "\u001B[33mVEILAR WARNING:\nColor input is empty. Defaulting to Black.\u001B[0m"
+            return "#000000"
+        }
+
+        // PATCH: Handle case sensitivity (e.g. "White" vs "white")
+        input = input.toLowerCase().trim()
+
+        if (input.startsWith("#")) {
+            return input
+        } else {
+            String[] colors = input.split("\\+")
+            int totalR = 0, totalG = 0, totalB = 0
+
+            // To match Java logic of averaging valid colors
+            int validColorCount = 0
+
+            for (String colorEntry : colors) {
+                String[] parts = colorEntry.split("_")
+                int brightnessFactor = 0
+                String hex = "#000000"
+                boolean foundBase = false
+
+                for (String part : parts) {
+                    if (part == "light") {
+                        brightnessFactor += 30
+                    } else if (part == "dark") {
+                        brightnessFactor -= 30
+                    } else if (basecolors.containsKey(part)) {
+                        hex = basecolors[part]
+                        foundBase = true
+                    } else if (part.startsWith("#")) {
+                        hex = part
+                        foundBase = true
+                    } else {
+                        // println "\u001B[33mVEILAR WARNING:\nUnknown color constant '${part}'. Defaulting to Black (#000000).\u001B[0m"
+                    }
+                }
+
+                try {
+                    int colorInt = Integer.parseInt(hex.replace("#", ""), 16)
+                    int r = (colorInt >> 16) & 0xFF
+                    int g = (colorInt >> 8) & 0xFF
+                    int b = colorInt & 0xFF
+
+                    totalR += Math.min(255, Math.max(0, r + brightnessFactor))
+                    totalG += Math.min(255, Math.max(0, g + brightnessFactor))
+                    totalB += Math.min(255, Math.max(0, b + brightnessFactor))
+                    validColorCount++
+                } catch (NumberFormatException e) {
+                    println "\u001B[33mVEILAR WARNING:\nInvalid Hex format '${hex}'. Segment ignored.\u001B[0m"
+                }
+            }
+
+            int avgR = 0, avgG = 0, avgB = 0
+            if (validColorCount > 0) {
+                avgR = (int)(totalR / validColorCount)
+                avgG = (int)(totalG / validColorCount)
+                avgB = (int)(totalB / validColorCount)
+            }
+
+            return String.format("#%02X%02X%02X", avgR, avgG, avgB)
+        }
+    }
+}
+
+class GradientResolver {
+    static class Result {
+        String type, tile
+        int angle
+        String[] hexColors
+        double[] stops
+        String[] shaderParams
+
+        Result(String t, int a, String tl, String[] h, double[] s, String[] sp) {
+            type=t; angle=a; tile=tl; hexColors=h; stops=s; shaderParams=sp
+        }
+    }
+
+    static Result resolve(String input) {
+        if (!input || !input.contains(";")) {
+            println "\u001B[33mVEILAR WARNING:\nInvalid gradient input. Format should be 'color:stop;color:stop|type|angle'.\u001B[0m"
+            return null // Caller handles null
+        }
+
+        // PATCH: Normalize casing for gradient parser
+        input = input.toLowerCase()
+
+        String[] parts = input.split("\\|")
+        if (parts.length < 2) {
+            println "\u001B[33mVEILAR WARNING:\nGradient metadata missing (type/angle/tile). Defaulting to linear | 0 | clamp.\u001B[0m"
+        }
+
+        String type = "linear"
+        int angle = 0
+        String tile = "clamp"
+        String[] shaderParams = []
+
+        for (int i = 1; i < parts.length; i++) {
+            String bit = parts[i].trim()
+            if (bit.isEmpty()) continue
+
+            if (bit == "clamp" || bit == "mirror" || bit == "repeat") {
+                tile = bit
+            } else if (bit.matches("-?\\d+")) {
+                angle = Integer.parseInt(bit)
+            } else if (bit.contains("radial") || bit.contains("linear") || bit.contains("sweep")) {
+                shaderParams = bit.split(":", -1)
+                type = shaderParams[0]
+            }
+        }
+
+        String[] colorSegments = parts[0].split(";")
+        int n = colorSegments.length
+        if (n < 2) {
+            println "\u001B[33mVEILAR WARNING:\nGradient requires at least 2 colors. ID: " + n + " segment(s) found.\u001B[0m"
+        }
+
+        String[] hexColors = new String[n]
+        Double[] percents = new Double[n]
+
+        for (int i = 0; i < n; i++) {
+            String segment = colorSegments[i].trim()
+            if (segment.contains(":")) {
+                String[] values = segment.split(":")
+                hexColors[i] = ColorResolver.resolve(values[0].trim())
+                try {
+                    String pRaw = values[1].replaceAll("[^\\d.]", "")
+                    percents[i] = pRaw.isEmpty() ? null : Double.parseDouble(pRaw)
+                } catch (Exception e) {
+                    println "\u001B[33mVEILAR WARNING:\nInvalid percent value in segment: " + segment + ". Defaulting to auto-fill.\u001B[0m"
+                    percents[i] = null
+                }
+            } else {
+                hexColors[i] = ColorResolver.resolve(segment)
+                percents[i] = null
+            }
+        }
+
+        double[] finalStops = calculateFinalStops(percents)
+        return new Result(type, angle, tile, hexColors, finalStops, shaderParams)
+    }
+
+    static double[] calculateFinalStops(Double[] raw) {
+        int n = raw.length
+        if (n == 0) return new double[0]
+
+        double[] relativeSizes = new double[n]
+        double currentSum = 0
+        int nulls = 0
+
+        for (Double p : raw) {
+            if (p != null) currentSum += p
+            else nulls++
+        }
+
+        if (currentSum > 100.0) {
+            println "\u001B[33mVEILAR WARNING:\nGradient stops sum (" + currentSum + "%) exceeds 100%. Normalizing weights.\u001B[0m"
+        }
+
+        double fill = (nulls > 0) ? Math.max(0, (100.0 - currentSum) / nulls) : 0
+        double totalWeight = 0
+        for (int i = 0; i < n; i++) {
+            relativeSizes[i] = (raw[i] != null) ? raw[i] : fill
+            totalWeight += relativeSizes[i]
+        }
+
+        double[] cumulativeStops = new double[n]
+        double runningTotal = 0
+        for (int i = 0; i < n; i++) {
+            if (i == 0) {
+                cumulativeStops[i] = 0.0
+                runningTotal += (totalWeight > 0) ? relativeSizes[i] / totalWeight : 0
+            } else if (i == n - 1) {
+                cumulativeStops[i] = 1.0
+            } else {
+                cumulativeStops[i] = runningTotal
+                runningTotal += (totalWeight > 0) ? relativeSizes[i] / totalWeight : 0
+            }
+        }
+
+        return cumulativeStops
+    }
+}
+
+class VeilarEngine {
+    static int selectorCount = 0
+    static Map<String, String> generatedAssets = [:]
+
+    // Modified run signature to accept folder paths directly from gradle task
+    static void run(File inputDir, File outputDir, File resDir) {
+        try {
+            selectorCount = 0
+            generatedAssets.clear()
+
+            File colorDir = new File(resDir, "color")
+            File drawDir = new File(resDir, "drawable")
+            File assetsDir = new File(resDir.getParentFile(), "assets")
+
+            // Logic from clearOldVeilarResources
+            if (colorDir.exists()) {
+                colorDir.listFiles()?.each { if (it.name.startsWith("vsel_")) it.delete() }
+            }
+            if (drawDir.exists()) {
+                drawDir.listFiles()?.each { if (it.name.startsWith("vsrc_")) it.delete() }
+            }
+
+            // Iterate over all XML files in layout directory
+            inputDir.listFiles()?.each { file ->
+                if (file.name.endsWith(".xml")) {
+                    processFile(file, new File(outputDir, file.name), colorDir, drawDir, assetsDir)
+                }
+            }
+
+            writeBuildReport(assetsDir)
+
+        } catch (Exception e) { e.printStackTrace() }
+    }
+
+    static void processFile(File inputFile, File outputFile, File colorDir, File drawDir, File assetsDir) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance()
+            DocumentBuilder builder = factory.newDocumentBuilder()
+            Document doc = builder.parse(inputFile)
+
+            // Logic: Snapshot Construction
+            Map<String, Map<String, String>> attrSnapshot = [:]
+            NodeList allNodes = doc.getElementsByTagName("*")
+
+            for (int i = 0; i < allNodes.length; i++) {
+                Element el = (Element) allNodes.item(i)
+                if (el.hasAttribute("android:id")) {
+                    // Normalize ID: remove @+id/ and lowercase it for reliable lookup
+                    String cleanId = el.getAttribute("android:id").replaceAll("@\\+?id/", "").toLowerCase()
+                    Map<String, String> attrs = [:]
+                    NamedNodeMap nnm = el.getAttributes()
+                    for (int j = 0; j < nnm.length; j++) {
+                        Node node = nnm.item(j)
+                        attrs.put(node.nodeName, node.nodeValue)
+                    }
+                    attrSnapshot.put(cleanId, attrs)
+                }
+            }
+
+            // Logic: Main Transformation Loop
+            for (int i = 0; i < allNodes.length; i++) {
+                Element element = (Element) allNodes.item(i)
+                boolean needsSwap = false
+                int parsedShapeId = 0 // Track shape ID to inject default radius if needed
+
+                String userId = element.hasAttribute("android:id") ?
+                        element.getAttribute("android:id").replaceAll("@\\+?id/", "").toLowerCase() :
+                        "unnamed"
+
+                // --- 1. SRC ATTRIBUTE ---
+                if (element.hasAttribute("as9:src")) {
+                    String rawPath = resolveValue(element, "as9:src", attrSnapshot, 0, userId)
+                    if (rawPath && !rawPath.isEmpty()) {
+                        File srcFile = new File(rawPath)
+                        if (srcFile.exists()) {
+                            String safeName = "vsrc_" + userId + "_" + (selectorCount++)
+                            if (!drawDir.exists()) drawDir.mkdirs()
+
+                            // Copy file
+                            Files.copy(srcFile.toPath(), new File(drawDir, safeName + getExtension(srcFile)).toPath(), StandardCopyOption.REPLACE_EXISTING)
+
+                            element.setAttribute("android:background", "@drawable/" + safeName)
+                            // Cleanup
+                            element.removeAttribute("as9:src")
+                            element.removeAttribute("as9:shade")
+                            element.removeAttribute("as9:bgshade")
+                            element.removeAttribute("as9:gradient")
+                            element.removeAttribute("as9:bggradient")
+                            generatedAssets.put(safeName, "Source: " + rawPath)
+                            needsSwap = true
+                        } else {
+                            println "\u001B[33mVEILAR WARNING:\nSource file not found at: " + rawPath + ". ID: " + userId + " will have no background.\u001B[0m"
+                        }
+                    }
+                }
+
+                // --- 2. INTERACTION ---
+                if (element.hasAttribute("as9:interaction")) {
+                    String interaction = element.getAttribute("as9:interaction")
+                    String baseShade = resolveValue(element, "as9:shade", attrSnapshot, 0, userId)
+
+                    if (baseShade && (interaction.contains("dim") || interaction.contains("glow"))) {
+                        String normalHex = ColorResolver.resolve(baseShade)
+                        float factor = interaction.contains("dim") ? 0.75f : 1.25f
+                        String pressedHex = adjustBrightness(normalHex, factor)
+
+                        String selectorName = "vsel_" + userId + "_" + (selectorCount++)
+                        generateColorSelector(colorDir, selectorName, normalHex, pressedHex)
+                        generatedAssets.put(selectorName, normalHex + " -> " + pressedHex)
+
+                        String tagName = element.tagName.toLowerCase()
+                        if (tagName.contains("textview")) {
+                            element.setAttribute("android:textColor", "@color/" + selectorName)
+                        } else {
+                            element.setAttribute("android:backgroundTint", "@color/" + selectorName)
+                        }
+                        element.removeAttribute("as9:shade")
+                    } else if (interaction.contains("dim") || interaction.contains("glow")) {
+                        println "\u001B[33mVEILAR WARNING:\nInteraction requires 'as9:shade' to calculate brightness. ID: " + userId + "\u001B[0m"
+                    }
+
+                    element.setAttribute("app:interactionBundle", interaction)
+                    element.removeAttribute("as9:interaction")
+                    needsSwap = true
+                }
+
+                // --- 3. SHAPE ---
+                if (element.hasAttribute("as9:shape")) {
+                    String rawShape = resolveValue(element, "as9:shape", attrSnapshot, 0, userId)
+                    if (rawShape) {
+                        rawShape = rawShape.toLowerCase().trim()
+                        int shapeId = 0
+                        String param = "0"
+                        String X = "100dp"; String Y = "50dp"
+
+                        if (rawShape.startsWith("circle") || rawShape.startsWith("oval")) {
+                            shapeId = 1
+                            if (rawShape.contains(":")) {
+                                String dimsPart = rawShape.split(":")[1].trim()
+                                if (dimsPart.contains(",")) {
+                                    String[] dim = dimsPart.split(",")
+                                    if (dim.length > 0 && dim[0]) X = ensureUnit(dim[0])
+                                    if (dim.length > 1 && dim[1]) Y = ensureUnit(dim[1])
+                                } else {
+                                    X = ensureUnit(dimsPart); Y = X
+                                }
+                                element.setAttribute("android:layout_width", X)
+                                element.setAttribute("android:layout_height", Y)
+                            }
+                        } else if (rawShape.startsWith("cut")) shapeId = 2
+                        else if (rawShape.startsWith("pill")) shapeId = 3
+                        else if (rawShape.startsWith("squircle")) shapeId = 4
+                        else if (rawShape.startsWith("gon")) {
+                            shapeId = 5
+                            param = rawShape.contains(":") ? rawShape.split(":")[1].trim() : "5"
+                            try { Integer.parseInt(param) } catch(Exception e) {
+                                println "\u001B[33mVEILAR WARNING:\nInvalid polygon side count '" + param + "'. Defaulting to 5. ID: " + userId + "\u001B[0m"
+                                param = "5"
+                            }
+                        }
+
+                        parsedShapeId = shapeId // Store for later default injection
+                        element.setAttribute("app:shapeBundle", "${shapeId}:${param}")
+                        element.removeAttribute("as9:shape")
+                        needsSwap = true
+                    }
+                }
+
+                // --- 4. RADIUS ---
+                if (element.hasAttribute("as9:radius")) {
+                    element.setAttribute("app:radius", resolveValue(element, "as9:radius", attrSnapshot, 0, userId))
+                    element.removeAttribute("as9:radius")
+                    needsSwap = true
+                } else {
+                    // PATCH: Default radius logic.
+                    // If complex shape (2=Cut, 4=Squircle) is used but radius is missing -> 16dp
+                    // If no shape (0=Rect) but BG gradient is present -> 8dp
+                    if (parsedShapeId == 2 || parsedShapeId == 4) {
+                        element.setAttribute("app:radius", "16dp")
+                    } else if (element.hasAttribute("as9:bggradient")) {
+                        element.setAttribute("app:radius", "8dp")
+                    }
+                }
+
+                // --- 5. GRADIENT ---
+                if (element.hasAttribute("as9:gradient")) {
+                    String rawValue = resolveValue(element, "as9:gradient", attrSnapshot, 0, userId)
+                    if (rawValue) {
+                        def res = GradientResolver.resolve(rawValue)
+                        if (res) element.setAttribute("app:gradient", bundleResult(res))
+                        element.removeAttribute("as9:gradient")
+                        needsSwap = true
+                    }
+                }
+
+                // --- 6. BG GRADIENT ---
+                if (element.hasAttribute("as9:bggradient")) {
+                    String rawValue = resolveValue(element, "as9:bggradient", attrSnapshot, 0, userId)
+                    if (rawValue) {
+                        def res = GradientResolver.resolve(rawValue)
+                        if (res) element.setAttribute("app:bggradient", bundleResult(res))
+                        element.removeAttribute("as9:bggradient")
+                        needsSwap = true
+                    }
+                }
+
+                // --- 7. BG SHADE ---
+                if (element.hasAttribute("as9:bgshade")) {
+                    String rawValue = resolveValue(element, "as9:bgshade", attrSnapshot, 0, userId)
+                    if (rawValue) {
+                        element.setAttribute("app:bgshade", ColorResolver.resolve(rawValue))
+                        element.removeAttribute("as9:bgshade")
+                        needsSwap = true
+                    }
+                }
+
+                // --- 8. TAG SWAPPING ---
+                if (needsSwap) {
+                    String originalTag = element.tagName
+                    String newTag = originalTag
+
+                    // Comprehensive swap logic
+                    if (originalTag.contains("ConstraintLayout")) newTag = "com.veilar.VeilarLayout"
+                    else if (originalTag.contains("LinearLayout")) newTag = "com.veilar.VeilarLayout" // Crucial for octo_container
+                    else if (originalTag == "Button" || originalTag.contains("Button")) newTag = "com.veilar.VeilarButton"
+                    else if (originalTag == "TextView") newTag = "com.veilar.VeilarTextView"
+
+                    if (newTag != originalTag) doc.renameNode(element, null, newTag)
+                }
+
+                // --- 9. SIMPLE SHADE (Late binding) ---
+                if (element.hasAttribute("as9:shade")) {
+                    String hex = ColorResolver.resolve(resolveValue(element, "as9:shade", attrSnapshot, 0, userId))
+                    String tag = element.tagName.toLowerCase()
+                    if (tag.contains("textview")) element.setAttribute("android:textColor", hex)
+                    else if (tag.contains("button")) element.setAttribute("android:backgroundTint", hex)
+                    else element.setAttribute("android:background", hex)
+                    element.removeAttribute("as9:shade")
+                }
+
+                processSizing(element, userId)
+            }
+
+            saveXml(doc, outputFile)
+
+        } catch (Exception e) { e.printStackTrace() }
+    }
+
+    static void processSizing(Element element, String userId) {
+        if (element.hasAttribute("as9:size")) {
+            String size = element.getAttribute("as9:size")
+            element.setAttribute("as9:width", size)
+            element.setAttribute("as9:height", size)
+            element.removeAttribute("as9:size")
+        }
+        Node parent = element.getParentNode()
+        if (parent instanceof Element) {
+            Element pEl = (Element) parent
+            String pName = pEl.nodeName
+            // PATCH: Added VeilarLayout to valid parents check
+            boolean isConstraint = pName.contains("ConstraintLayout") || pName.contains("VeilarLayout")
+            boolean isLinear = pName.contains("LinearLayout")
+
+            if (element.hasAttribute("as9:width")) {
+                String val = element.getAttribute("as9:width")
+                if (val.contains("%")) {
+                    String decimal = convertToDecimal(val)
+                    if (isConstraint) {
+                        element.setAttribute("android:layout_width", "0dp")
+                        element.setAttribute("app:layout_constraintWidth_percent", decimal)
+                    } else if (isLinear) {
+                        element.setAttribute("android:layout_width", "0dp")
+                        element.setAttribute("android:layout_weight", decimal)
+                    } else {
+                        println "\u001B[33mVEILAR WARNING:\nPercent-based width for ID: " + userId + " requires ConstraintLayout or LinearLayout.\u001B[0m"
+                    }
+                } else {
+                    element.setAttribute("android:layout_width", ensureUnit(val))
+                }
+                element.removeAttribute("as9:width")
+            }
+            if (element.hasAttribute("as9:height")) {
+                String val = element.getAttribute("as9:height")
+                if (val.contains("%")) {
+                    String decimal = convertToDecimal(val)
+                    if (isConstraint) {
+                        element.setAttribute("android:layout_height", "0dp")
+                        element.setAttribute("app:layout_constraintHeight_percent", decimal)
+                    } else if (isLinear) {
+                        element.setAttribute("android:layout_height", "0dp")
+                        element.setAttribute("android:layout_weight", decimal)
+                    } else {
+                        println "\u001B[33mVEILAR WARNING:\nPercent-based height for ID: " + userId + " requires ConstraintLayout or LinearLayout.\u001B[0m"
+                    }
+                } else {
+                    element.setAttribute("android:layout_height", ensureUnit(val))
+                }
+                element.removeAttribute("as9:height")
+            }
+        }
+    }
+
+    // CRITICAL LOGIC: Recursive ID resolution (Fixes Shared Gradients)
+    static String resolveValue(Element current, String attrName, Map<String, Map<String, String>> snapshot, int depth, String userId) {
+        if (depth > 10) {
+            println "\u001B[33mVEILAR WARNING:\nResolution depth limit (10) exceeded. Possible circular ID reference for ID: " + userId + "\u001B[0m"
+            return null
+        }
+        String val = current.getAttribute(attrName)
+
+        // Strategy 1: Look at the element itself
+        if ((!val || val.isEmpty()) && current.hasAttribute("android:id")) {
+            String id = current.getAttribute("android:id").replaceAll("@\\+?id/", "").toLowerCase()
+            if (snapshot.containsKey(id)) val = snapshot[id][attrName]
+        }
+
+        // Strategy 2: If value references another ID (id:...), resolve recursively
+        if (val && val.startsWith("id:")) {
+            String targetId = val.substring(3).trim().toLowerCase()
+            if (snapshot.containsKey(targetId)) {
+                String targetVal = snapshot[targetId][attrName]
+                if (targetVal) {
+                    return targetVal.startsWith("id:") ? resolveFromSnapshot(targetId, attrName, snapshot, depth + 1, userId) : targetVal
+                }
+            }
+        }
+        return val
+    }
+
+    static String resolveFromSnapshot(String id, String attr, Map<String, Map<String, String>> snapshot, int depth, String userId) {
+        if (depth > 10 || !snapshot.containsKey(id)) return null
+        String val = snapshot[id][attr]
+        return (val && val.startsWith("id:")) ? resolveFromSnapshot(val.substring(3).trim(), attr, snapshot, depth + 1, userId) : val
+    }
+
+    static String getExtension(File file) {
+        String name = file.getName()
+        int lastDot = name.lastIndexOf('.')
+        return (lastDot == -1) ? "" : name.substring(lastDot)
+    }
+
+    static void writeBuildReport(File assetsDir) {
+        try {
+            if (!assetsDir.exists()) assetsDir.mkdirs()
+            File reportFile = new File(assetsDir, "veilar_report.json")
+            StringBuilder sb = new StringBuilder("{\n  \"generated_assets\": {\n")
+            int i = 0
+            for (Map.Entry<String, String> entry : generatedAssets.entrySet()) {
+                sb.append("    \"").append(entry.getKey()).append("\": \"").append(entry.getValue()).append("\"")
+                if (++i < generatedAssets.size()) sb.append(",")
+                sb.append("\n")
+            }
+            sb.append("  }\n}")
+            Files.write(reportFile.toPath(), sb.toString().getBytes())
+        } catch (Exception e) { e.printStackTrace() }
+    }
+
+    static String adjustBrightness(String hex, float factor) {
+        try {
+            int color = Long.parseLong(hex.replace("#", ""), 16).intValue()
+            int a = (hex.length() > 7) ? (color >> 24) & 0xFF : 0xFF
+            int r = Math.min(255, (int)(((color >> 16) & 0xFF) * factor))
+            int g = Math.min(255, (int)(((color >> 8) & 0xFF) * factor))
+            int b = Math.min(255, (int)((color & 0xFF) * factor))
+            return String.format("#%02X%02X%02X%02X", a, r, g, b)
+        } catch (Exception e) { return hex }
+    }
+
+    static void generateColorSelector(File dir, String name, String normal, String pressed) {
+        if (!dir.exists()) dir.mkdirs()
+        String xml = """<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true" android:color="${pressed}" />
+    <item android:color="${normal}" />
+</selector>"""
+        new File(dir, "${name}.xml").text = xml
+    }
+
+    static String ensureUnit(String val) {
+        if (!val) return "wrap_content"
+        val = val.trim()
+        return (val.endsWith("dp") || val.endsWith("px") || val.endsWith("%") || val == "wrap_content" || val == "match_parent") ? val : "${val}dp"
+    }
+
+    static String bundleResult(GradientResolver.Result res) {
+        StringBuilder sb = new StringBuilder(res.type)
+        for (int k = 1; k < res.shaderParams.length; k++) sb.append(":").append(res.shaderParams[k])
+        sb.append("|")
+        for (int k = 0; k < res.hexColors.length; k++) {
+            sb.append(res.hexColors[k]).append(":").append(res.stops[k])
+            if (k < res.hexColors.length - 1) sb.append(";")
+        }
+        sb.append("|").append(res.angle).append("|").append(res.tile)
+        return sb.toString()
+    }
+
+    static String convertToDecimal(String percentStr) {
+        if (!percentStr.contains("%")) return percentStr
+        return String.valueOf(Float.parseFloat(percentStr.replace("%", "")) / 100.0f)
+    }
+
+    static void saveXml(Document doc, File out) throws Exception {
+        Transformer t = TransformerFactory.newInstance().newTransformer()
+        t.setOutputProperty(OutputKeys.INDENT, "yes")
+        t.transform(new DOMSource(doc), new StreamResult(out))
+    }
+}

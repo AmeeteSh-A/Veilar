@@ -4,10 +4,8 @@
 
 ---
 ### 🔗 Quick Links
-- [⚡ The Efficiency Gap](#-the-efficiency-gap)
-- [🛠️ Key Features](#-key-features)
-- [⚙️ Architecture](#-architecture-the-invisible-hook)
-- [📦 Installation Steps](#-installation)
+- [⚡ The Efficiency Gap](#-the-efficiency-gap) - [⚙️ Architecture](#-architecture-the-invisible-hook) - [📦 Installation Steps](#-installation)
+- [📐 Usage Example](#-usage-example) - [✨Features](#supported-features) -[📄Documentation](#documentation) - [📂 Project Structure](#-project-structure)
 ---
 
 Veilar is a **two-phase UI system for Android** that compiles declarative UI intent at **build time** and executes rendering, geometry, gradients, and interactions at **runtime**.
@@ -29,6 +27,7 @@ In native Android, even a simple interactive component (custom shape + pressed s
 
 Veilar collapses this into **a single declarative tag**, without sacrificing performance or control.
 
+<p align="right">(<a href="#veilar">back to top</a>)</p>
 ---
 
 ### ⚡ The Efficiency Gap
@@ -61,6 +60,7 @@ Veilar works in **two phases**:
 > Veilar compiles **structure**.  
 > The runtime executes **behavior and rendering**.
 
+<p align="right">(<a href="#veilar">back to top</a>)</p>
 ---
 ~~~ mermaid
 flowchart TD
@@ -93,6 +93,7 @@ flowchart TD
 | No interaction abstraction | Unified interaction engine |
 | Verbose XML | Compact DSL |
 
+<p align="right">(<a href="#veilar">back to top</a>)</p>
 ---
 
 ## The DSL (as9:)
@@ -149,8 +150,9 @@ Veilar introduces a small, composable DSL via XML attributes.
 
 (Examples are placeholders — see documentation below.)
 
+<p align="right">(<a href="#veilar">back to top</a>)</p>
 ---
-## Supported Features
+## ✨Supported Features
 
 ### 🏗️ Build-Time (The Compiler)
 
@@ -205,7 +207,7 @@ Features executed by `VeilarButton`, `VeilarLayout`, etc., on the device.
 - **Haptic Integration**  
   The `vibe` attribute triggers the system's haptic feedback engine automatically on interaction events.
 
-
+<p align="right">(<a href="#veilar">back to top</a>)</p>
 ---
 
 ## ⚙️ Architecture: The "Invisible Hook"
@@ -239,6 +241,7 @@ This maps generated assets to their source declarations.
 - **Build-Time Resolution:** Heavy DSL logic (recursion, color math) is compiled, not interpreted at runtime.
 - **Explicit Execution:** The runtime views only consume optimized, pre-compiled data bundles. 
 
+<p align="right">(<a href="#veilar">back to top</a>)</p>
 ---
 
 ## 📄Documentation
@@ -253,6 +256,7 @@ Veilar has **two levels of documentation**:
 
 This separation keeps usage simple while allowing deep technical inspection.
 
+<p align="right">(<a href="#veilar">back to top</a>)</p>
 ---
 
 ## 📦 Installation
@@ -283,6 +287,7 @@ your-project/
 
 *(This hooks Veilar into your build process to perform the XML translation.)*
 
+<p align="right">(<a href="#veilar">back to top</a>)</p>
 ---
 
 ## ⚠️Technical Trade-offs (Known & Intentional)
@@ -320,6 +325,7 @@ Project Root
             └── attrs.xml     // 🎨 THE DSL (Attribute Definitions)
 ```
 
+<p align="right">(<a href="#veilar">back to top</a>)</p>
 ---
 
 ## 🚧What Veilar Is Not
@@ -348,3 +354,5 @@ Focused on Android internals, UI systems, and build tooling.
 ## License
 
 MIT License. Free to use, modify, and learn from.
+
+<p align="right">(<a href="#veilar">back to top</a>)</p>

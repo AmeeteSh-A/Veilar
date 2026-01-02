@@ -113,6 +113,7 @@ veilar/
         ├── VeilarButton.java   # Handles 'shrink' and 'bggradient'
         ├── VeilarLayout.java   # Handles 'pop', 'vibe', containers
         └── VeilarTextView.java # Handles text gradients
+```
 
 
 - **[📘 User Manual (Conceptual / Usage)](Veilar/docs/user_manual.md)**

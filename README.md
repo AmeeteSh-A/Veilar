@@ -96,8 +96,8 @@ com.example.veilar.VeilarButton
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     as9:shape="squircle:16dp"
-    as9:shade="crimson+amber_light"
-    as9:interaction="shrink|vibe"  />
+    as9:shade="crimson+light_green"
+    as9:interaction="shrink,vibe"  />
 ~~~
 
 ### Another Example (conceptual)

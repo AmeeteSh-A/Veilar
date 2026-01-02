@@ -91,14 +91,55 @@ flowchart TD
 ## The DSL (as9:)
 
 Veilar introduces a small, composable DSL via XML attributes.
-~~~xml
-com.example.veilar.VeilarButton
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+## 📐 Usage Example
+
+### Input (What You Write)
+
+```xml
+<Button
+    android:id="@+id/my_button"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
     as9:shape="squircle:16dp"
-    as9:shade="crimson+light_green"
-    as9:interaction="shrink,vibe"  />
-~~~
+    as9:bggradient="crimson+light_amber:30% | linear | 45"
+    as9:interaction="shrink, glow, vibe"
+    as9:width="50%" />
+
+<Button
+    android:id="@+id/your_button"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    as9:shape="gon:8"
+    as9:src="C:\Users\Lenovo\Desktop\ClassiFy\classifyUI\itemcontainer.png"
+    as9:interaction="shrink, pop"
+    as9:width="id:my_button" />
+```
+
+### Output (What Veilar Compiles To)
+
+#### 🏗️ Build-Time (Compiler)
+
+- Generates `vsel_my_button.xml` (Color State List) for interaction states.
+- Resolves color algebra expressions (e.g., `crimson+light_amber`) and **converts all colors to final hex values**.
+- Parses gradient definitions, resolves gradient type and parameters, and **normalizes color stop positions**.
+- Resolves `as9:width="50%"` and injects  
+  `layout_constraintWidth_percent="0.5"` (or the appropriate attribute based on the parent layout).
+- Resolves `as9:width="id:my_button"` by recursively inheriting the referenced view’s computed value.
+- Detects raw asset paths, copies files into `res/drawable`, and rewrites references automatically.
+- Precomputes color variants required for interaction effects such as `glow` and `dim`.
+
+#### 🚀 Runtime (Engine)
+
+- **Renders normalized gradients on the GPU** (Linear, Radial, Sweep) using runtime shader construction.
+- Renders procedural shapes (e.g., **Squircle**, **Polygon**) directly on the GPU.
+- Executes interaction animations (`shrink`, `pop`) via a unified physics engine.
+- Triggers system haptic feedback automatically when `vibe` is specified.
+
+---
+
+**Result:** Clean XML in, fully resolved colors and gradients at build-time, GPU-driven rendering at runtime — no manual selectors, no asset plumbing, no unnecessary runtime overhead.
+
+
 (Examples are placeholders — see documentation below.)
 
 ---
@@ -182,7 +223,7 @@ Once the app launches, `VeilarButton` and `VeilarLayout` take over. instead of p
 
 Every build emits:
 
-assets/veilar_report.json
+`assets/veilar_report.json`
 
 
 This maps generated assets to their source declarations.
@@ -262,7 +303,7 @@ I wanted to challenge the assumption that Android UI development *has* to be ver
 ## Author
 
 Built by **Ameetesh**  
-B.Tech Undergraduate (2nd–3rd semester)  
+B.Tech Undergraduate (South Asian University)  
 Focused on Android internals, UI systems, and build tooling.
 
 ---

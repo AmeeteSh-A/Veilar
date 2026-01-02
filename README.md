@@ -1,7 +1,7 @@
 # test
 # Veilar
 ### A Two-Phase Android UI Transpiler
-
+![Language](https://img.shields.io/badge/Language-Java_%7C_Groovy-orange) ![Platform](https://img.shields.io/badge/Platform-Android-green) ![License](https://img.shields.io/badge/License-MIT-blue) ![Status](https://img.shields.io/badge/Status-Experimental-red)
 Veilar is a **two-phase UI system for Android** that compiles declarative UI intent at **build time** and executes rendering, geometry, gradients, and interactions at **runtime**.
 
 It replaces verbose, multi-file Android UI workflows with a compact DSL written directly in XML, while still producing **100% native Android UI**.

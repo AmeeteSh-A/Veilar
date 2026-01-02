@@ -247,11 +247,12 @@ Veilar has **two levels of documentation**:
 This separation keeps usage simple while allowing deep technical inspection.
 
 ---
-📦 Installation
+
+## 📦 Installation
 
 Veilar is designed as a drop-in module.
 
-    -Copy the veilar directory to your project root.
+Copy the veilar directory to your project root.
     -Include the module in `settings.gradle`:
     `include ':veilar'`
     -Add Dependency in `app/build.gradle`:

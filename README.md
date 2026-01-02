@@ -288,7 +288,8 @@ your-project/
 
     ```dependencies {
     implementation project(':veilar')
-    }```
+    }
+    ```
 
 - Activate Compiler in `app/build.gradle` (Top or Bottom):
 

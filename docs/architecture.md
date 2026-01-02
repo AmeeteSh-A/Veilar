@@ -1,5 +1,9 @@
 # ⚙️ Veilar Architecture & Internals
 
+<p align="right">
+  <a href="../../README.md">🔙 Back to Readme</a>
+</p>
+
 > **"Write Intent. Compile Native."**
 
 Veilar is not just a runtime library; it is a **Build-Time Transpiler** that sits between your source XML and the Android Asset Packaging Tool (AAPT). This document details the engineering decisions behind the system.

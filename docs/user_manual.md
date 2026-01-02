@@ -204,7 +204,7 @@ Veilar is transparent. If something is wrong, it prints **Yellow Warnings** in y
 | `Invalid polygon side count.` | You wrote `gon:x` where x is not a number. | Use a valid integer, e.g., `gon:6`. |
 
 
-- **[⚙️ Technical Architecture (Build + Runtime internals)](Veilar/docs/architecture.md)**
+- **[⚙️ Technical Architecture (Build + Runtime internals)](/docs/architecture.md)**
   *For contributors and engineers.*
   <p align="right">
   <a href="../../README.md">Readme</a>

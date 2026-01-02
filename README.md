@@ -225,19 +225,28 @@ These are conscious tradeoffs for clarity and learning value.
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
-buildSrc/\
-├── VeilarEngine.java\
-├── ColorResolver.java\
-└── GradientResolver.java
+Veilar is contained entirely within a single module, making it easy to drop into any project.
 
-app/\
-├── VeilarButton.java\
-├── VeilarLayout.java\
-├── VeilarTextView.java\
-└── attrs.xml
-
+```text
+Project Root
+├── app/                      // Your App (Consumer)
+│   └── src/main/assets/      // 📄 veilar_report.json (Generated Debug Map)
+│
+└── veilar/                   // The Veilar Library (Source)
+    ├── veilar.gradle         // 🏗️ THE COMPILER (Groovy Script)
+    │                         // Contains: VeilarEngine, ColorResolver, GradientResolver
+    │
+    └── src/main/
+        ├── java/com/veilar/  // 🚀 THE RUNTIME (Java Views)
+        │   ├── VeilarButton.java
+        │   ├── VeilarLayout.java
+        │   └── VeilarTextView.java
+        │
+        └── res/values/
+            └── attrs.xml     // 🎨 THE DSL (Attribute Definitions)
+```
 
 ---
 

@@ -123,8 +123,6 @@ Veilar uses a powerful "Color Algebra" engine. You can mix and modify colors dir
 
 ### C. Gradients (`as9:gradient` vs `as9:bggradient`)
 
-### **Gradients** (`as9:gradient` vs `as9:bggradient`)
-
 Veilar compiles complex gradients into optimized GPU shaders without requiring separate XML drawable files.
 
 **Syntax:** `COLORS | TYPE | ANGLE | TILE`

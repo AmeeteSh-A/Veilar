@@ -1,4 +1,3 @@
-# test
 # Veilar
 ### A Two-Phase Android UI Transpiler
 ![Language](https://img.shields.io/badge/Language-Java_%7C_Groovy-orange) ![Platform](https://img.shields.io/badge/Platform-Android-green) ![License](https://img.shields.io/badge/License-MIT-blue) ![Status](https://img.shields.io/badge/Status-Experimental-red)
@@ -219,7 +218,7 @@ Once the app launches, `VeilarButton` and `VeilarLayout` take over. instead of p
 * **Zero Reflection:** Properties are applied via standard setter methods.
 * **GPU Rendering:** Shapes are drawn using `Canvas` and `Shader` primitives, ensuring 60fps animations even for complex polygons.---
 
-## Transparency & Safety
+## 🛡️Transparency & Safety
 
 Every build emits:
 
@@ -234,7 +233,7 @@ This maps generated assets to their source declarations.
 
 ---
 
-## Documentation
+## 📄Documentation
 
 Veilar has **two levels of documentation**:
 
@@ -278,7 +277,7 @@ your-project/
 
 ---
 
-## Technical Trade-offs (Known & Intentional)
+## ⚠️Technical Trade-offs (Known & Intentional)
 
 - Not incremental-build optimized
 - String-based DSL (no schema validation)
@@ -315,7 +314,7 @@ Project Root
 
 ---
 
-## What Veilar Is Not
+## 🚧What Veilar Is Not
 
 - ❌ Not a replacement for Jetpack Compose
 - ❌ Not a design system
@@ -330,7 +329,7 @@ I wanted to challenge the assumption that Android UI development *has* to be ver
 
 ---
 
-## Author
+## 👨‍💻Author
 
 Built by **Ameetesh**  
 B.Tech Undergraduate (South Asian University)  
@@ -340,4 +339,4 @@ Focused on Android internals, UI systems, and build tooling.
 
 ## License
 
-MIT
+MIT License. Free to use, modify, and learn from.

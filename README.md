@@ -91,15 +91,14 @@ flowchart TD
 ## The DSL (as9:)
 
 Veilar introduces a small, composable DSL via XML attributes.
-```xml
-<\
-com.example.veilar.VeilarButton\
-    android:layout_width="wrap_content"\
-    android:layout_height="wrap_content"\
-    as9:shape="squircle:16dp"\
-    as9:shade="crimson+amber_light"\
-    as9:interaction="shrink|vibe"\/>
-```
+~~~xml
+com.example.veilar.VeilarButton
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    as9:shape="squircle:16dp"
+    as9:shade="crimson+amber_light"
+    as9:interaction="shrink|vibe"  />
+~~~
 
 ### Another Example (conceptual)
 -*-*-*-*-*-*-*--------------------*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**--*-*-*-*

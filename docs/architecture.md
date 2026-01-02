@@ -119,5 +119,5 @@ veilar/
 - **[📘 User Manual (Conceptual / Usage)](/docs/user_manual.md)**
   *For developers integrating Veilar into their apps.*
 <p align="right">
-  <a href="../../README.md">Readme</a>
+  <a href="/README.md">Readme</a>
 </p>

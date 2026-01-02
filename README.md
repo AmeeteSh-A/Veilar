@@ -8,7 +8,7 @@ Veilar is a **two-phase UI system for Android** that compiles declarative UI int
 It replaces verbose, multi-file Android UI workflows with a compact DSL written directly in XML, while still producing **100% native Android UI**.
 
 > **"Write Intent. Compile Native."**
-> Veilar replaces the verbose, multi-file "drawable hell" of Android development with a single, expressive tag—without sacrificing native performance.
+> Veilar replaces the verbose, multi-file "drawable hell" of Android development with a single, expressive tag- without sacrificing native performance.
 
 ---
 
@@ -91,7 +91,7 @@ flowchart TD
 ## The DSL (as9:)
 
 Veilar introduces a small, composable DSL via XML attributes.
-
+```xml
 <\
 com.example.veilar.VeilarButton\
     android:layout_width="wrap_content"\
@@ -99,7 +99,7 @@ com.example.veilar.VeilarButton\
     as9:shape="squircle:16dp"\
     as9:shade="crimson+amber_light"\
     as9:interaction="shrink|vibe"\/>
-
+```
 
 ### Another Example (conceptual)
 -*-*-*-*-*-*-*--------------------*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**--*-*-*-*

@@ -365,6 +365,6 @@ Focused on Android internals, UI systems, and build tooling.
 
 ## License
 
-MIT License. Free to use, modify, and learn from.
+Apache License 2.0.
 
 <p align="right">(<a href="#veilar">back to top</a>)</p>

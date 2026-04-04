@@ -1,6 +1,6 @@
 # Veilar
 ### A Two-Phase Android UI Transpiler
-![Language](https://img.shields.io/badge/Language-Java_%7C_Groovy-orange) ![Platform](https://img.shields.io/badge/Platform-Android-green) ![License](https://img.shields.io/badge/License-MIT-blue) ![Status](https://img.shields.io/badge/Status-Experimental-red)
+![Language](https://img.shields.io/badge/Language-Java_%7C_Groovy-orange) ![Platform](https://img.shields.io/badge/Platform-Android-green) ![License](https://img.shields.io/badge/License-Apache_2.0-blue) ![Status](https://img.shields.io/badge/Status-Experimental-red)
 
 ---
 ### 🔗 Quick Links
